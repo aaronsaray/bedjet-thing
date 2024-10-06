@@ -1,0 +1,51 @@
+esphome:
+  name: bedjet
+
+esp32:
+  board: esp32dev
+  framework:
+    type: arduino
+
+ota:
+  - platform: esphome
+    password: ""
+
+wifi:
+  ssid: "MyWifi2"
+  password: "mZm7Huc*Md"
+
+  ap:
+    ssid: "Bedjet3 Fallback Hotspot"
+    password: "3VoHBKQost1m"
+
+captive_portal:
+
+esp32_ble_tracker:
+
+ble_client:
+  - mac_address: D4:D4:DA:42:16:C6
+    id: bedjet_ble_id1
+
+bedjet:
+  - id: bedjet_1
+    ble_client_id: bedjet_ble_id1
+
+climate:
+  - platform: bedjet
+    id: my_bedjet_climate_entity
+    name: "My BedJet"
+    bedjet_id: bedjet_1
+
+fan:
+  - platform: bedjet
+    id: my_bedjet_fan_entity
+    name: "My BedJet Fan"
+    bedjet_id: bedjet_1
+
+sensor:
+  - platform: bedjet
+    bedjet_id: bedjet_1
+    outlet_temperature:
+      name: "My BedJet Outlet Temperature"
+    ambient_temperature:
+      name: "My BedJet Ambient Temperature"
