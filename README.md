@@ -25,4 +25,4 @@ To restart - click restart button - or run:
 ## Functionality
 
 * Loads and blinks blue LED. When connected, turns solid blue for 3 seconds then goes out
-* Loads 'settings.json' if it exists to connect to wifi network
+* Loads 'bedjet.json' if it exists to connect to wifi network
