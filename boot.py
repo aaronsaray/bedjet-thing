@@ -1,5 +1,3 @@
-# boot.py -- run on boot-up
-
 try:
   import usocket as socket
 except:
@@ -7,25 +5,44 @@ except:
 
 from machine import Pin
 import network
-
 import esp
-esp.osdebug(None)
-
 import gc
-gc.collect()
-
-ssid = 'REPLACE_WITH_YOUR_SSID'
-password = 'REPLACE_WITH_YOUR_PASSWORD'
-
-station = network.WLAN(network.STA_IF)
-
-station.active(True)
-station.connect(ssid, password)
-
-while station.isconnected() == False:
-  pass
-
-print('Connection successful')
-print(station.ifconfig())
+import time
+import asyncio
 
 led = Pin(2, Pin.OUT)
+ssid = 'MonkFish'
+password = 'chompers99*'
+
+
+async def blink_led():
+  while True:
+    led.on()
+    await asyncio.sleep(0.1)
+    led.off()
+    await asyncio.sleep(0.1)
+
+
+async def connect_to_wifi():
+  wlan = network.WLAN(network.STA_IF)
+  wlan.active(True)
+  wlan.connect(ssid, password)
+
+  while not wlan.isconnected():
+    await asyncio.sleep(0.1)
+
+  led.off()
+
+
+async def main():
+  esp.osdebug(None)
+  gc.collect()
+
+  blink_task = asyncio.create_task(blink_led())
+
+  await connect_to_wifi()
+
+  blink_task.cancel()
+
+
+asyncio.run(main())

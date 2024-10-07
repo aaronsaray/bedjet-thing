@@ -14,4 +14,10 @@
 
 Restart and it's going to run the code.
 
-You can run the VS Code User Task called Copy to ESP32 which will copy over files and do a soft reset.
+To deploy a file:
+
+`rshell -p /dev/tty.usbserial-0001 cp boot.py /pyboard`
+
+To restart - click restart button - or run:
+
+`rshell -p /dev/tty.usbserial-0001 "repl ~ import machine ~ machine.soft_reset() ~"`
