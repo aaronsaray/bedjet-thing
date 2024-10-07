@@ -13,3 +13,5 @@
     * `cp main.py /pyboard`
 
 Restart and it's going to run the code.
+
+You can run the VS Code User Task called Copy to ESP32 which will copy over files and do a soft reset.

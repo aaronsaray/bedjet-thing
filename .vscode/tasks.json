@@ -1,0 +1,20 @@
+{
+    // See https://go.microsoft.com/fwlink/?LinkId=733558
+    // for the documentation about the tasks.json format
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Copy main.py",
+            "type": "shell",
+            "command": "rshell -p /dev/tty.usbserial-0001 cp main.py /pyboard",
+            "problemMatcher": []
+        },
+        {
+            "label": "RShell Copy to ESP32",
+            "type": "shell",
+            "command": "rshell -p /dev/tty.usbserial-0001 \"repl ~ import machine ~ machine.soft_reset() ~\"",
+            "problemMatcher": [],
+            "dependsOn": ["Copy main.py"]
+        }
+    ]
+}
