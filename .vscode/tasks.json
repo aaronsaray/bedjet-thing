@@ -4,10 +4,17 @@
     "version": "2.0.0",
     "tasks": [
         {
+            "label": "Copy boot.py",
+            "type": "shell",
+            "command": "rshell -p /dev/tty.usbserial-0001 cp boot.py /pyboard",
+            "problemMatcher": []
+        },
+        {
             "label": "Copy main.py",
             "type": "shell",
             "command": "rshell -p /dev/tty.usbserial-0001 cp main.py /pyboard",
-            "problemMatcher": []
+            "problemMatcher": [],
+            "dependsOn": ["Copy boot.py"]
         },
         {
             "label": "RShell Copy to ESP32",
