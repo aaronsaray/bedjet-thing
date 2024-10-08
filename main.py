@@ -14,6 +14,16 @@ settingsFile = 'bedjet.json'
 
 
 
+def has_settings_file():
+  return settingsFile in os.listdir()
+    
+
+
+def create_wifi():
+  pass
+
+
+
 def connect_to_wifi(ssid, password):
   wlan = network.WLAN(network.STA_IF)
   wlan.active(True)
@@ -28,7 +38,11 @@ def connect_to_wifi(ssid, password):
 
 
 def get_web_response():
-  with open("index.html", "r") as index:
+  page = "first.html"
+  if has_settings_file():
+    page = "index.html"
+ 
+  with open(page, "r") as index:
     html = index.read()
     index.close()
   return html
@@ -77,12 +91,15 @@ def main():
   esp.osdebug(None)
   gc.collect()
 
-  if settingsFile in os.listdir():
-    led_action()
+  led_action()
+
+  if has_settings_file():
     file = open(settingsFile, 'r')
     c = json.load(file)
 
     connect_to_wifi(c['ssid'], c['password'])
+  else:
+    create_wifi()
 
   led_done()
 
