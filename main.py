@@ -1,6 +1,13 @@
+try:
+  import usocket as socket
+except:
+  import socket
+
+
 def web_page():
   with open("index.html", "r") as index:
     html = index.read()
+    index.close()
 
   return html
 
