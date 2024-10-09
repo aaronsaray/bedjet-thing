@@ -38,9 +38,9 @@ def connect_to_wifi(ssid, password):
 
 
 def get_web_response():
-  page = "first.html"
+  page = "web/first.html"
   if has_settings_file():
-    page = "index.html"
+    page = "web/index.html"
  
   with open(page, "r") as index:
     html = index.read()
