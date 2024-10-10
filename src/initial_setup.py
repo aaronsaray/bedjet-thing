@@ -12,6 +12,7 @@ class InitialSetup:
     def __init__(self):
         esp.osdebug(None)
         gc.collect()
+        self.wifi_connection = ''
         self.startWifi()
         
     def startWifi(self):
@@ -24,9 +25,8 @@ class InitialSetup:
         return self.SETTINGS_FILE in os.listdir();
 
     def startInternalWiFi(self):
-        # clean up just in case
-        external_connection = network.WLAN(network.STA_IF)
-        external_connection.active(False)        
+        self.wifi_connection = network.WLAN(network.STA_IF)
+        self.wifi_connection.active(False) # disconnect    
 
         # generate the access point
         access_point = network.WLAN(network.AP_IF)
