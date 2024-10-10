@@ -3,7 +3,7 @@ try:
 except:
   import socket
 import gc
-
+import re
 
 class WebServer:
     def __init__(self, status_led, wifi_connection):
@@ -77,6 +77,8 @@ class WebServer:
             contentType = 'image/x-icon'
         elif filename == '/api/wifis':
             content = self.get_wifis_list_content()
+        elif filename.startswith('/api/wifi-auth'):
+            content = self.get_wifi_authenticate(request)
 
         if content == '':
             content = self.get_content('web' + page)
@@ -86,6 +88,32 @@ class WebServer:
         connection.send('Connection: close\n\n')
         connection.sendall(content)
         connection.close()
+
+    def get_wifi_authenticate(self, request):
+        pattern = re.compile('ssid=(.*?)&password=(.*?)\s')
+
+        match = re.search(pattern, request)
+        ssid = match.group(1)
+        password = match.group(2)
+        content = """
+            <form hx-get="/api/wifi-auth">
+                <div style="color: red; font-weight: bold; margin-bottom: 1rem">
+                    Can not connect. Perhaps the password is incorrect?
+                </div>
+                <div id="form-container">
+                    <label for="ssid">SSID:</label> 
+                    <input type="text" readonly name="ssid" id="ssid" value="{0}" />
+                    <label for="password">WiFi Password:</label>
+                    <input type="password" name="password" id="password" autofocus required />
+                    <button type="submit">Connect</button>
+                    <div id="cancel">
+                        <a href="#" id="go-back" hx-on:click="document.querySelector('dialog').close()">Cancel</a>
+                    </div>
+                </div>
+            </form>        
+        """.format(ssid)
+
+        return content
 
     def get_wifis_list_content(self):
         self.wifi_connection.active(True)
@@ -112,12 +140,12 @@ class WebServer:
         else:
             dialog = """
                 <dialog>
-                    <form hx-get="wifi-auth-success.htmx" hx-swap="outerHTML">
+                    <form hx-get="/api/wifi-auth" hx-swap="outerHTML">
                         <div id="form-container">
                             <label for="ssid">SSID:</label> 
                             <input type="text" readonly name="ssid" id="ssid" />
                             <label for="password">WiFi Password:</label>
-                            <input type="text" name="password" id="password" autofocus required />
+                            <input type="password" name="password" id="password" autofocus required />
                             <button type="submit">Connect</button>
                             <div id="cancel">
                                 <a href="#" id="go-back" hx-on:click="document.querySelector('dialog').close()">Cancel</a>
@@ -129,3 +157,41 @@ class WebServer:
             result = ssid_collection + dialog
 
         return '<div id="wifi-list">{0}</div>'.format(result)
+    
+    def url_decode(self, url_string):
+
+        # Source: https://forum.micropython.org/viewtopic.php?t=3076
+        # unquote('abc%20def') -> b'abc def'
+        # Note: strings are encoded as UTF-8. This is only an issue if it contains
+        # unescaped non-ASCII characters, which URIs should not.
+
+        if not url_string:
+            return b''
+
+        if isinstance(url_string, str):
+            url_string = url_string.encode('utf-8')
+
+        bits = url_string.split(b'%')
+
+        if len(bits) == 1:
+            return url_string
+
+        res = [bits[0]]
+        appnd = res.append
+        hextobyte_cache = {}
+
+        for item in bits[1:]:
+            try:
+                code = item[:2]
+                char = hextobyte_cache.get(code)
+                if char is None:
+                    char = hextobyte_cache[code] = bytes([int(code, 16)])
+                appnd(char)
+                appnd(item[2:])
+            except Exception as error:
+                if self.debug:
+                    print(error)
+                appnd(b'%')
+                appnd(item)
+
+        return b''.join(res)
