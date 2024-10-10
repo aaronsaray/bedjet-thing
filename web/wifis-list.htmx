@@ -1,0 +1,79 @@
+<style>
+    #wifi-list {
+        max-height: 60vh;
+        display: flex;
+        flex-direction: column;
+        overflow-y: auto;
+        gap: 0.5rem;
+    }
+
+    ::backdrop {
+        background: #112244;
+        opacity: 0.75;
+    }
+
+    dialog form {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 1rem;
+    }
+
+    #ssid {
+        border: 0;
+        font-weight: bold;
+        color: #777;
+    }
+    #password {
+        border: none;
+        border-bottom: 2px solid #777;
+        outline: none;
+        padding: 0.3rem 0.1rem;
+    }
+    button {
+        background-color: #f37e00;
+        color: white;
+        border-radius: 3rem;
+        padding: 0.3rem 1rem;
+        border: none;
+        font-size: 1.1rem;
+        cursor: pointer;
+    }
+    button:hover {
+        background-color: #f35500;
+    }
+
+    #cancel {
+        text-align: end;
+    }
+    #cancel a {
+        color: red;
+        text-align: end;
+        font-size: 0.9rem;
+        text-decoration: none;
+    }
+
+</style>
+
+<div id="wifi-list">
+    <a 
+        href="#" 
+        hx-on:click="
+            document.querySelector('#ssid').value = 'SSID1';
+            document.querySelector('dialog').showModal();
+        ">
+        SSID1
+    </a>
+</div>
+
+<dialog>
+    <form>
+        <label for="ssid">SSID:</label> 
+        <input type="text" readonly name="ssid" id="ssid" />
+        <label for="password">WiFi Password:</label>
+        <input type="text" name="password" id="password" autofocus required />
+        <button type="submit">Connect</button>
+        <div id="cancel">
+            <a href="#" id="go-back" hx-on:click="document.querySelector('dialog').close()">Cancel</a>
+        </div>
+    </form>
+</dialog>

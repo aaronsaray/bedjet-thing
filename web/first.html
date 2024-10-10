@@ -55,6 +55,11 @@
             background: #fff;
             box-shadow: 8px 5px 10px 0px rgba(0,0,0,0.75);
         }
+        #panel-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+        }
 
         .loading {
             text-align: center;
@@ -83,8 +88,19 @@
     <main>
         <section>
             <h2>Configure WiFi</h2>
-            <div id="panel" hx-get="/api/wifis.html" hx-trigger="load">
-                <div class="loading">Loading...</div>
+            <div id="panel">
+                <div id="panel-header">
+                    <div>
+                        Choose your WiFi connection from the list.
+                    </div>
+                    <div>
+                        <a href="#" hx-get="wifis-list.htmx" hx-target="#wifi-list" hx-swap="outerHTML">Refresh</a>
+                    </div>
+                </div>
+    
+                <div id="wifi-list" hx-get="wifis-list.htmx" hx-trigger="load">
+                    <div class="loading">Loading...</div>
+                </div>
             </div>
         </section>
     </main>
