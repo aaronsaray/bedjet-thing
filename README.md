@@ -5,22 +5,19 @@
 * `brew install micropython`
 * `ls /dev/tty.usb*` to see the usb name
 * `esptool.py --port /dev/tty.usbserial-0001 erase_flash`
-* `esptool.py --chip esp32 --port /dev/tty.usbserial-0001 --baud 921600 write_flash -z 0x1000 ESP32_GENERIC-20240602-v1.23.0.bin`
+* `esptool.py --chip esp32 --port /dev/tty.usbserial-0001 write_flash -z 0x1000 ESP32_GENERIC-20240602-v1.23.0.bin`
 * `pipx install rshell`
-* `rshell -p /dev/tty.usbserial-0001`
-    * `ls` is local directory
-    * `ls /pyboard` is the board itself
-    * `cp main.py /pyboard`
 
 Restart and it's going to run the code.
 
 To deploy a file:
 
 `rshell -p /dev/tty.usbserial-0001 cp boot.py /pyboard`
+`rshell -p /dev/tty.usbserial-0001 cp main.py /pyboard`
 
-To restart - click restart button - or run:
-
-`rshell -p /dev/tty.usbserial-0001 "repl ~ import machine ~ machine.soft_reset() ~"`
+Rsync the files over:
+`rshell -p /dev/tty.usbserial-0001 rsync src /pyboard/src`
+`rshell -p /dev/tty.usbserial-0001 rsync web /pyboard/web`
 
 ## Functionality
 
