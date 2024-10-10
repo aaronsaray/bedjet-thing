@@ -12,7 +12,7 @@
         opacity: 0.75;
     }
 
-    dialog form {
+    dialog #form-container {
         display: grid;
         grid-template-columns: repeat(2, minmax(0, 1fr));
         gap: 1rem;
@@ -66,14 +66,16 @@
 </div>
 
 <dialog>
-    <form>
-        <label for="ssid">SSID:</label> 
-        <input type="text" readonly name="ssid" id="ssid" />
-        <label for="password">WiFi Password:</label>
-        <input type="text" name="password" id="password" autofocus required />
-        <button type="submit">Connect</button>
-        <div id="cancel">
-            <a href="#" id="go-back" hx-on:click="document.querySelector('dialog').close()">Cancel</a>
+    <form hx-get="wifi-auth-success.htmx" hx-swap="outerHTML">
+        <div id="form-container">
+            <label for="ssid">SSID:</label> 
+            <input type="text" readonly name="ssid" id="ssid" />
+            <label for="password">WiFi Password:</label>
+            <input type="text" name="password" id="password" autofocus required />
+            <button type="submit">Connect</button>
+            <div id="cancel">
+                <a href="#" id="go-back" hx-on:click="document.querySelector('dialog').close()">Cancel</a>
+            </div>
         </div>
     </form>
 </dialog>

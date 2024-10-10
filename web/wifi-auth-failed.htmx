@@ -1,0 +1,15 @@
+<form hx-get="/wifi-auth-failed.htmx">
+    <div style="color: red; font-weight: bold; margin-bottom: 1rem">
+        Can not connect. Perhaps the password is incorrect?
+    </div>
+    <div id="form-container">
+        <label for="ssid">SSID:</label> 
+        <input type="text" readonly name="ssid" id="ssid" value="SSID1" />
+        <label for="password">WiFi Password:</label>
+        <input type="text" name="password" id="password" autofocus required />
+        <button type="submit">Connect</button>
+        <div id="cancel">
+            <a href="#" id="go-back" hx-on:click="document.querySelector('dialog').close()">Cancel</a>
+        </div>
+    </div>
+</form>
