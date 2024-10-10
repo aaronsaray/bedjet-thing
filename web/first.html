@@ -55,7 +55,25 @@
             background: #fff;
             box-shadow: 8px 5px 10px 0px rgba(0,0,0,0.75);
         }
+
+        .loading {
+            text-align: center;
+            font-weight: bold;
+            animation: loading 1s infinite;
+        }
+        @keyframes loading {
+            0% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0;
+            }
+            100% {
+                opacity: 1
+            }
+        }
     </style>
+    <script src="htmx.min.js"></script>
 </head>
 <body>
     <header>
@@ -65,8 +83,8 @@
     <main>
         <section>
             <h2>Configure WiFi</h2>
-            <div id="panel">
-                <p>Choose your WiFi connection from the list.</p>
+            <div id="panel" hx-get="/api/wifis.html" hx-trigger="load">
+                <div class="loading">Loading...</div>
             </div>
         </section>
     </main>
