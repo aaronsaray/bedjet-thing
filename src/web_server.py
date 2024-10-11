@@ -8,6 +8,7 @@ import time
 import json
 import network
 import machine
+import os
 
 class WebServer:
     def __init__(self, status_led, wifi_connection, has_settings_file):
@@ -17,6 +18,7 @@ class WebServer:
         self.socket = ''
         self.server = ''
         self.reset = False
+        self.clear_settings = False
         print('Starting server')
         self.run()
 
@@ -86,6 +88,8 @@ class WebServer:
             contentType = 'image/x-icon'
         elif filename == '/api/wifis':
             content = self.get_wifis_list_content()
+        elif filename == '/api/clear-settings':
+            content = self.do_clear_settings()
         elif filename.startswith('/api/wifi-auth'):
             content = self.get_wifi_authenticate(request)
 
@@ -98,8 +102,27 @@ class WebServer:
         connection.sendall(content)
         connection.close()
 
+        if self.clear_settings:
+            os.remove('bedjet.json')
+
         if self.reset:
+            time.sleep(2) # idk if this matters but it makes me feel like the response returns better
             machine.reset()
+
+    def do_clear_settings(self):
+        response = """
+            <p style="color: white">Clearing settings...</p>
+            <p style="color: white">Please connect to the ESP32 WiFi again.</p>
+            <script>
+                setTimeout(() => {
+                    window.location.href = 'http://192.168.4.1';
+                }, 5000);
+            </script>
+        """
+        self.clear_settings = True
+        self.reset = True
+        return response
+
 
     def get_wifi_authenticate(self, request):
         pattern = re.compile('ssid=(.*?)&password=(.*?)\s')
@@ -197,7 +220,7 @@ class WebServer:
             if self.wifi_connection.isconnected():
                 print('\nConnected! Network information:', self.wifi_connection.ifconfig())
                 self.write_credentials(ssid, password)
-                self.disconnect_ap = True;
+                self.reset = True;
                 return True
             else:
                 print('.', end='')

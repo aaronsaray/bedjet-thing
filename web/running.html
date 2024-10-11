@@ -56,10 +56,14 @@
             background: #fff;
             box-shadow: 8px 5px 10px 0px rgba(0,0,0,0.75);
         }
-        #panel-header {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 1rem;
+
+        #reset {
+            font-size: 0.9rem;
+            color: red;
+            text-decoration: underline;
+            border: none;
+            background: transparent;
+            margin-top: 1rem;
         }
     </style>
     <script src="htmx.min.js"></script>
@@ -75,6 +79,7 @@
             <div id="panel">
                 You are currently connected to the internet. Hooray!
             </div>
+            <button hx-get="/api/clear-settings" hx-confirm="Are you sure you wish to reset your WiFi connection?" hx-swap="outerHTML" id="reset">Reset</button>
         </section>
     </main>
 </body>
