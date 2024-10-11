@@ -6,7 +6,6 @@ import gc
 import re
 import time
 import json
-import network
 import machine
 import os
 
@@ -19,6 +18,7 @@ class WebServer:
         self.server = ''
         self.reset = False
         self.clear_settings = False
+        self.ip = ''
         print('Starting server')
         self.run()
 
@@ -132,20 +132,20 @@ class WebServer:
         password = match.group(2)
         if self.wifi_connect(ssid, password):
             content = """
-            <div class="padding: 1rem">
-                <div style="color: green; font-weight: bold">
-                    Successfully connected.
+                <div class="padding: 1rem">
+                    <div style="color: green; font-weight: bold">
+                        Successfully connected.
+                    </div>
+                    <p>
+                        Please wait a moment. Disconnecting from BedJet32 and returning to the previous connection.
+                    </p>
                 </div>
-                <p>
-                    Please wait a moment. Disconnecting from BedJet32 and returning to the previous connection.
-                </p>
-            </div>
-            <script>
-                setTimeout(() => {
-                    window.location.href="https://bedjet.com?ref=as";
-                }, 5000);
-            </script>
-            """
+                <script>
+                    setTimeout(() => {{
+                        window.location.href="http://{0}";
+                    }}, 10000);
+                </script>
+            """.format(self.ip)
         else:
             content = """
                 <form hx-get="/api/wifi-auth" hx-swap="outerHTML" hx-indicator="#wifi-auth-button">
@@ -221,6 +221,7 @@ class WebServer:
                 print('\nConnected! Network information:', self.wifi_connection.ifconfig())
                 self.write_credentials(ssid, password)
                 self.reset = True;
+                self.ip = self.wifi_connection.ifconfig()[0]
                 return True
             else:
                 print('.', end='')
