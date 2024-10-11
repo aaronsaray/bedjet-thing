@@ -17,8 +17,10 @@ class InitialSetup:
         
     def startWifi(self):
         if self.has_settings_file():
+            print('has settings file')
             pass
         else:
+            print('no settings file')
             self.startInternalWiFi()
 
     def has_settings_file(self):

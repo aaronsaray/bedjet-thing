@@ -1,9 +1,0 @@
-<div style="color: green; font-weight: bold">
-    Successfully connected.
-</div>
-
-<script>
-    setTimeout(() => {
-        window.location.href="index.html";
-    }, 3000);
-</script>

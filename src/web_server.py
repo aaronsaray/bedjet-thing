@@ -4,6 +4,9 @@ except:
   import socket
 import gc
 import re
+import time
+import json
+import network
 
 class WebServer:
     def __init__(self, status_led, wifi_connection):
@@ -11,6 +14,7 @@ class WebServer:
         self.wifi_connection = wifi_connection
         self.socket = ''
         self.server = ''
+        self.disconnect_ap = False
         print('Starting server')
         self.run()
 
@@ -89,29 +93,51 @@ class WebServer:
         connection.sendall(content)
         connection.close()
 
+        if self.disconnect_ap:
+            time.sleep(2) # perhaps give it time to return the connection?
+            access_point = network.WLAN(network.AP_IF)
+            access_point.active(False)
+
     def get_wifi_authenticate(self, request):
         pattern = re.compile('ssid=(.*?)&password=(.*?)\s')
 
         match = re.search(pattern, request)
         ssid = match.group(1)
         password = match.group(2)
-        content = """
-            <form hx-get="/api/wifi-auth">
-                <div style="color: red; font-weight: bold; margin-bottom: 1rem">
-                    Can not connect. Perhaps the password is incorrect?
+        if self.wifi_connect(ssid, password):
+            content = """
+            <div class="padding: 1rem">
+                <div style="color: green; font-weight: bold">
+                    Successfully connected.
                 </div>
-                <div id="form-container">
-                    <label for="ssid">SSID:</label> 
-                    <input type="text" readonly name="ssid" id="ssid" value="{0}" />
-                    <label for="password">WiFi Password:</label>
-                    <input type="password" name="password" id="password" autofocus required />
-                    <button type="submit">Connect</button>
-                    <div id="cancel">
-                        <a href="#" id="go-back" hx-on:click="document.querySelector('dialog').close()">Cancel</a>
+                <p>
+                    Please wait a moment. Disconnecting from BedJet32 and returning to the previous connection.
+                </p>
+            </div>
+            <script>
+                setTimeout(() => {
+                    window.location.href="https://bedjet.com?ref=as";
+                }, 5000);
+            </script>
+            """
+        else:
+            content = """
+                <form hx-get="/api/wifi-auth" hx-swap="outerHTML" hx-indicator="#wifi-auth-button">
+                    <div style="color: red; font-weight: bold; margin-bottom: 1rem">
+                        Can not connect. Perhaps the password is incorrect?
                     </div>
-                </div>
-            </form>        
-        """.format(ssid)
+                    <div id="form-container">
+                        <label for="ssid">SSID:</label> 
+                        <input type="text" readonly name="ssid" id="ssid" value="{0}" />
+                        <label for="password">WiFi Password:</label>
+                        <input type="password" name="password" id="password" autofocus required />
+                        <button type="submit" id="wifi-auth-button">Connect</button>
+                        <div id="cancel">
+                            <a href="#" id="go-back" hx-on:click="document.querySelector('dialog').close()">Cancel</a>
+                        </div>
+                    </div>
+                </form>        
+            """.format(ssid)
 
         return content
 
@@ -140,13 +166,13 @@ class WebServer:
         else:
             dialog = """
                 <dialog>
-                    <form hx-get="/api/wifi-auth" hx-swap="outerHTML">
+                    <form hx-get="/api/wifi-auth" hx-swap="outerHTML" hx-indicator="#wifi-auth-button">
                         <div id="form-container">
                             <label for="ssid">SSID:</label> 
                             <input type="text" readonly name="ssid" id="ssid" />
                             <label for="password">WiFi Password:</label>
                             <input type="password" name="password" id="password" autofocus required />
-                            <button type="submit">Connect</button>
+                            <button type="submit" id="wifi-auth-button">Connect</button>
                             <div id="cancel">
                                 <a href="#" id="go-back" hx-on:click="document.querySelector('dialog').close()">Cancel</a>
                             </div>
@@ -158,40 +184,31 @@ class WebServer:
 
         return '<div id="wifi-list">{0}</div>'.format(result)
     
-    def url_decode(self, url_string):
-
-        # Source: https://forum.micropython.org/viewtopic.php?t=3076
-        # unquote('abc%20def') -> b'abc def'
-        # Note: strings are encoded as UTF-8. This is only an issue if it contains
-        # unescaped non-ASCII characters, which URIs should not.
-
-        if not url_string:
-            return b''
-
-        if isinstance(url_string, str):
-            url_string = url_string.encode('utf-8')
-
-        bits = url_string.split(b'%')
-
-        if len(bits) == 1:
-            return url_string
-
-        res = [bits[0]]
-        appnd = res.append
-        hextobyte_cache = {}
-
-        for item in bits[1:]:
-            try:
-                code = item[:2]
-                char = hextobyte_cache.get(code)
-                if char is None:
-                    char = hextobyte_cache[code] = bytes([int(code, 16)])
-                appnd(char)
-                appnd(item[2:])
-            except Exception as error:
-                if self.debug:
-                    print(error)
-                appnd(b'%')
-                appnd(item)
-
-        return b''.join(res)
+    
+    def wifi_connect(self, ssid, password):
+        print('Trying to connect to:', ssid)
+        
+        self.wifi_connection.connect(ssid, password)
+        
+        for _ in range(100):
+            if self.wifi_connection.isconnected():
+                print('\nConnected! Network information:', self.wifi_connection.ifconfig())
+                self.write_credentials(ssid, password)
+                self.disconnect_ap = True;
+                return True
+            else:
+                print('.', end='')
+                time.sleep_ms(100)
+        
+        print('\nConnection failed!')
+        
+        self.wifi_connection.disconnect()
+        
+        return False
+    
+    def write_credentials(self, ssid, password):
+        settingsFile = 'bedjet.json'
+        content = json.dumps({'ssid': ssid, 'password': password})
+        file = open(settingsFile, 'w')
+        file.write(content)
+        file.close()
