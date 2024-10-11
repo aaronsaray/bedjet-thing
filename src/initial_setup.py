@@ -2,6 +2,8 @@ import esp
 import gc
 import os
 import network
+import json
+from time import sleep
 
 class InitialSetup:
     SETTINGS_FILE = 'bedjet.json'
@@ -18,6 +20,7 @@ class InitialSetup:
     def startWifi(self):
         if self.has_settings_file():
             print('has settings file')
+            self.connectToWiFi()
             pass
         else:
             print('no settings file')
@@ -34,3 +37,17 @@ class InitialSetup:
         access_point = network.WLAN(network.AP_IF)
         access_point.active(True)
         access_point.config(essid = self.SSID, password = self.PASSWORD, authmode = self.AUTHMODE)
+
+    def connectToWiFi(self):
+        file = open(self.SETTINGS_FILE, 'r')
+        c = json.load(file)
+
+        wlan = network.WLAN(network.STA_IF)
+        wlan.active(True)
+        wlan.connect(c['ssid'], c['password'])
+
+        while not wlan.isconnected():
+            sleep(0.1)
+
+        print('WiFi Connected')
+        print(wlan.ifconfig())

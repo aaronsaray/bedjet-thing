@@ -7,14 +7,16 @@ import re
 import time
 import json
 import network
+import machine
 
 class WebServer:
-    def __init__(self, status_led, wifi_connection):
+    def __init__(self, status_led, wifi_connection, has_settings_file):
         self.status_led = status_led
         self.wifi_connection = wifi_connection
+        self.has_settings_file = has_settings_file
         self.socket = ''
         self.server = ''
-        self.disconnect_ap = False
+        self.reset = False
         print('Starting server')
         self.run()
 
@@ -70,7 +72,10 @@ class WebServer:
         content = ''
 
         if filename == '/':
-            page = '/index.html'
+            if self.has_settings_file:
+                page = '/running.html'
+            else:
+                page = '/index.html'
         elif filename == '/htmx.min.js':
             contentType = 'text/javascript'
         elif filename == '/logo-full.png':
@@ -93,10 +98,8 @@ class WebServer:
         connection.sendall(content)
         connection.close()
 
-        if self.disconnect_ap:
-            time.sleep(2) # perhaps give it time to return the connection?
-            access_point = network.WLAN(network.AP_IF)
-            access_point.active(False)
+        if self.reset:
+            machine.reset()
 
     def get_wifi_authenticate(self, request):
         pattern = re.compile('ssid=(.*?)&password=(.*?)\s')
