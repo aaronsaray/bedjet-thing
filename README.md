@@ -19,7 +19,6 @@ Rsync the files over:
 `rshell -p /dev/tty.usbserial-0001 rsync src /pyboard/src`
 `rshell -p /dev/tty.usbserial-0001 rsync web /pyboard/web`
 
-## Functionality
+## Current Issues
 
-* Loads and blinks blue LED. When connected, turns solid blue for 3 seconds then goes out
-* Loads 'bedjet.json' if it exists to connect to wifi network
+* Only allowing my 2 access points because I haven't yet figured out how to escape shit properly.

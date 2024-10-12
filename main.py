@@ -1,6 +1,11 @@
-from src.initial_setup import InitialSetup
-from src.web_server import WebServer
+from boot import status_led
+from src.microdot import Microdot
+from src.wifi_setup import WifiSetup
+from src.app import App
 
 status_led.action()
-setup = InitialSetup()
-WebServer(status_led, setup.wifi_connection, setup.has_settings_file())
+
+wifi = WifiSetup()
+App(wifi.wifi_connection)
+
+status_led.done()
