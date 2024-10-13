@@ -22,3 +22,4 @@ Rsync the files over:
 ## Current Issues
 
 * Only allowing my 2 access points because I haven't yet figured out how to escape shit properly.
+* No back-end validation

@@ -6,6 +6,6 @@ from src.app import App
 status_led.action()
 
 wifi = WifiSetup()
-App(wifi.wifi_connection)
+App(wifi.wifi_radio, wifi.write_credentials)
 
 status_led.done()

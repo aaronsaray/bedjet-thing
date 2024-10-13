@@ -9,44 +9,48 @@ class WifiSetup:
     PASSWORD = 'BedJetThing'
     AUTHMODE = 3
 
+    def __init__(self):
+        self.wifi_radio = network.WLAN(network.STA_IF)
+        self.access_point = network.WLAN(network.AP_IF)
+        self.start_wifi()
+
     def debug(self, message):
         print('DEBUG: ', end='')
         print(message)
 
-    def __init__(self):
-        self.wifi_connection = None
-        self.startWifi()
-        
-    def startWifi(self):
+    def start_wifi(self):
         if self.has_settings_file():
             self.debug('has settings file')
-            self.connectToWiFi()
+            self.connect_to_wifi()
         else:
             self.debug('no settings file')
-            self.startInternalWiFi()
+            self.start_access_point()
 
     def has_settings_file(self):
         return self.SETTINGS_FILE in os.listdir();
 
-    def startInternalWiFi(self):
-        self.wifi_connection = network.WLAN(network.STA_IF)
-        self.wifi_connection.active(False) # disconnect    
+    def write_credentials(self, ssid, password):
+        content = json.dumps({'ssid': ssid, 'password': password})
+        file = open(self.SETTINGS_FILE, 'w')
+        file.write(content)
+        file.close()
 
-        # generate the access point
-        access_point = network.WLAN(network.AP_IF)
-        access_point.active(True)
-        access_point.config(essid = self.SSID, password = self.PASSWORD, authmode = self.AUTHMODE)
-        self.debug('internal wifi started')
+    def start_access_point(self):
+        self.wifi_radio.active(False) # disconnect    
 
-    def connectToWiFi(self):
+        self.access_point.active(True)
+        self.access_point.config(essid = self.SSID, password = self.PASSWORD, authmode = self.AUTHMODE)
+        self.debug('access point started')
+
+    def connect_to_wifi(self):
+        self.access_point.active(False)
+
         file = open(self.SETTINGS_FILE, 'r')
         c = json.load(file)
+        self.wifi_radio.active(True)
+        self.wifi_radio.connect(c['ssid'], c['password'])
 
-        wlan = network.WLAN(network.STA_IF)
-        wlan.active(True)
-        wlan.connect(c['ssid'], c['password'])
-
-        while not wlan.isconnected():
+        while not self.wifi_radio.isconnected():
             sleep(0.1)
 
-        self.debug('wifi connected: ' + wlan.ifconfig()[0])
+        self.debug('wifi connected: ' + self.wifi_radio.ifconfig()[0])
