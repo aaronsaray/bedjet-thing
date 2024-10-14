@@ -35,6 +35,9 @@ class WifiSetup:
         file.write(content)
         file.close()
 
+    def clear_credentials(self):
+        os.remove(self.SETTINGS_FILE)
+
     def start_access_point(self):
         self.wifi_radio.active(False) # disconnect    
 

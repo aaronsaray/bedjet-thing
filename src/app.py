@@ -3,9 +3,10 @@ import time
 import machine
 
 class App:
-    def __init__(self, wifi_radio, write_credentials):
+    def __init__(self, wifi_radio, write_credentials, clear_credentials):
         self.wifi_radio = wifi_radio
         self.write_credentials = write_credentials
+        self.clear_credentials = clear_credentials
         self.ip = None
         self.restart = False
         self.start_microdot()
@@ -133,6 +134,38 @@ class App:
 
             return content
 
+        @app.route('/htmx/running')
+        async def running(request):
+            content = """
+                <h1>BedJet Thing is Running!</h1>
+                <section>
+                    <h2>Control BedJet</h2>
+                    <div id="panel">
+                        <fieldset>
+                            <legend>Fan</legend>
+                            <div>
+                                <label><input type="radio" name="fan" value="off" checked> Off</label>
+                                <label><input type="radio" name="fan" value="off"> Cool</label>
+                                <label><input type="radio" name="fan" value="off"> Heat</label>        
+                            </div>
+                        </fieldset>
+                        <fieldset>
+                            <legend>WiFi</legend>
+                            <div>
+                                <a href="#" hx-delete="/htmx/reset" hx-confirm="Are you sure you'd like to reset the device?" style="color: red">Reset BedJet Thing</a>   
+                            </div>
+                        </fieldset>
+                    </div>
+                </section>
+            """
+
+            return content
+
+        @app.route('/htmx/reset', methods=['DELETE'])
+        async def resetDevice(request):
+            self.debug('Device reset')
+            self.clear_credentials()
+            machine.reset()
 
         @app.route('/favicon.ico')
         async def favicon(request, path):
@@ -176,49 +209,3 @@ class App:
         self.wifi_radio.active(False)
 
         return False
-    
-
-#     def handle_response(self, request, connection):
-#         headers = request.split('\n')
-#         filename = headers[0].split()[1]
-
-#         # I know this is pretty bad
-#         contentType = 'text/html'
-#         page = filename
-#         content = ''
-
-#         if filename == '/':
-#             if self.has_settings_file:
-#                 page = '/running.html'
-#             else:
-#                 page = '/index.html'
-#         elif filename == '/htmx.min.js':
-#             contentType = 'text/javascript'
-#         elif filename == '/logo-full.png':
-#             contentType = 'image/png'
-#         elif filename == '/stars-bg.jpg':
-#             contentType = 'image/jpeg'
-#         elif filename == '/favicon.ico':
-#             contentType = 'image/x-icon'
-#         elif filename == '/api/wifis':
-#             content = self.get_wifis_list_content()
-#         elif filename == '/api/clear-settings':
-#             content = self.do_clear_settings()
-#         elif filename.startswith('/api/wifi-auth'):
-#             content = self.get_wifi_authenticate(request)
-
-#         if content == '':
-#             content = self.get_content('web' + page)
-
-#         connection.send('HTTP/1.1 200 OK\n')
-#         connection.send('Content-Type: ' + contentType + '\n')
-#         connection.send('Connection: close\n\n')
-#         connection.sendall(content)
-#         connection.close()
-
-#         if self.clear_settings:
-#             os.remove('bedjet.json')
-
-#         if self.reset:
-#             time.sleep(2) # idk if this matters but it makes me feel like the response returns better
-#             machine.reset()
