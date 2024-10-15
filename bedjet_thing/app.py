@@ -1,4 +1,4 @@
-from src.microdot import Microdot, send_file
+from bedjet_thing.microdot import Microdot, send_file
 import time
 import machine
 

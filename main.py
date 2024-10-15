@@ -1,7 +1,7 @@
 import gc
 from boot import status_led
-from src.wifi_setup import WifiSetup
-from src.app import App
+from bedjet_thing.wifi_setup import WifiSetup
+from bedjet_thing.app import App
 
 gc.enable()
 
