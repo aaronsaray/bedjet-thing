@@ -12,6 +12,7 @@ class WifiSetup:
     def __init__(self):
         self.wifi_radio = network.WLAN(network.STA_IF)
         self.access_point = network.WLAN(network.AP_IF)
+        network.hostname('bedjet-thing')
         self.start_wifi()
 
     def debug(self, message):
