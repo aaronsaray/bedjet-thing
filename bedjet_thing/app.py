@@ -20,14 +20,14 @@ class App:
 
         app = Microdot()
 
-        @app.route('/')
+        @app.get('/')
         async def index(request):
             if self.wifi_radio.isconnected():
                 return send_file('web/running.html')
             
             return send_file('web/index.html')
 
-        @app.route('/htmx/initial-load')
+        @app.get('/htmx/initial-load')
         async def initial_load(request):
             start_part = """
                 <h1>First time configuration. Welcome!</h1>
@@ -94,7 +94,7 @@ class App:
 
             return start_part + internal + end_part;
 
-        @app.route('/htmx/wifi-auth', methods=['POST'])
+        @app.post('/htmx/wifi-auth')
         async def wifi_auth(request):
             ssid = request.form.get('ssid')
             password = request.form.get('password')
@@ -134,7 +134,7 @@ class App:
 
             return content
 
-        @app.route('/htmx/running')
+        @app.get('/htmx/running')
         async def running(request):
             content = """
                 <h1>BedJet Thing is Running!</h1>
@@ -161,17 +161,17 @@ class App:
 
             return content
 
-        @app.route('/htmx/reset', methods=['DELETE'])
+        @app.delete('/htmx/reset')
         async def resetDevice(request):
             self.debug('Device reset')
             self.clear_credentials()
             machine.reset()
 
-        @app.route('/favicon.ico')
+        @app.get('/favicon.ico')
         async def favicon(request, path):
             return send_file('web/favicon.ico', max_age=86400)
 
-        @app.route('/assets/<path:path>')
+        @app.get('/assets/<path:path>')
         async def web(request, path):
             if '..' in path:
                 return 'Not found', 404
