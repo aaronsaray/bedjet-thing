@@ -4,6 +4,8 @@ from bedjet_thing.wifi_setup import WifiSetup
 from bedjet_thing.app import App
 
 gc.enable()
+gc.collect()
+gc.threshold(gc.mem_free() // 4 + gc.mem_alloc())
 
 status_led.action()
 
