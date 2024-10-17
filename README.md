@@ -28,3 +28,10 @@ Rsync the files over:
 
 pip install mpy-cross
 mpy-cross -march=xtensawin microdot.py ---- this made microdot.mpy and saved ram
+
+## Packages
+
+Install mpremote with pipx install mpremote
+
+Then, mpremote mip install aioble-central and mpremote mip install aioble-client
+
