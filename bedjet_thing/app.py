@@ -27,7 +27,7 @@ class App:
                 return 'Not found', 404
             return send_file('web/assets/' + path, max_age=86400)
 
-        @app.get('/htmx/initial-load.html')
+        @app.get('/htmx/initial-load')
         async def get_initial_load(request):
             ssids = self.wifi.get_available_ssids()
 
@@ -45,8 +45,25 @@ class App:
                         </a>
                         """.format(ssid.replace("'", "&quot;"))
                 listOfSsids = ''.join(map(toHtml, ssids))
+                listOfSsids += """
+                    <dialog>
+                        <form hx-post="/htmx/wifi-auth" hx-indicator="#wifi-auth-button" hx-target="#wifi-response">
+                            <div id="form-container">
+                                <label for="ssid">SSID:</label> 
+                                <input type="text" readonly name="ssid" id="ssid" />
+                                <label for="password">WiFi Password:</label>
+                                <input type="password" name="password" id="password" autofocus required style="border-radius: none" />
+                                <button type="submit" id="wifi-auth-button">Connect</button>
+                                <div id="cancel">
+                                    <a href="#" id="go-back" hx-on:click="document.querySelector('dialog').close()">Cancel</a>
+                                </div>
+                            </div>
+                            <div id="wifi-response"></div>
+                        </form>
+                    </dialog>
+                """
 
-            with open('web/htmx/initial-load.html') as f:
+            with open('web/htmx-templates/wifi-list.html') as f:
                 replacedText = f.read().replace('<!--wifi-list-->', listOfSsids)
                 return replacedText, 200;
 
