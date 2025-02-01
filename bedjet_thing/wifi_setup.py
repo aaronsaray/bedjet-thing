@@ -1,4 +1,6 @@
 import network
+import time
+import json
 from time import sleep
 from bedjet_thing.debug import Debug
 
@@ -6,6 +8,9 @@ class WifiSetup:
     SSID = 'BedJetThing'
     PASSWORD = 'BedJetThing'
     AUTHMODE = 3
+    SETTINGS_FILE = 'bedjet-thing.json'
+
+    ip = ''
 
     def __init__(self):
         self.wifi_radio = network.WLAN(network.STA_IF)
@@ -23,7 +28,7 @@ class WifiSetup:
         self.access_point.config(essid = self.SSID, password = self.PASSWORD, authmode = self.AUTHMODE)
         Debug.log('Access point started')
 
-    def getAvailableSsids(self):
+    def get_available_ssids(self):
         self.wifi_radio.active(True)
         ssids = set()
 
@@ -35,3 +40,31 @@ class WifiSetup:
         self.wifi_radio.active(False)
 
         return ssids
+    
+    def provision(self, ssid, password):
+        Debug.log('Attempting to connect to ssid ' + ssid)
+
+        self.wifi_radio.active(True)
+        self.wifi_radio.connect(ssid, password)
+        
+        for _ in range(100):
+            if self.wifi_radio.isconnected():
+                Debug.log('Connected to wifi')
+                Debug.log(self.wifi_radio.ifconfig())
+
+                self.ip = self.wifi_radio.ifconfig()[0]
+
+                content = json.dumps({'ssid': ssid, 'password': password})
+                file = open(self.SETTINGS_FILE, 'w')
+                file.write(content)
+                file.close()
+                
+                return True
+            else:
+                time.sleep_ms(100)
+        
+        Debug.log('Unable to connect')        
+        
+        self.wifi_radio.disconnect()
+        self.wifi_radio.active(False)
+        return False

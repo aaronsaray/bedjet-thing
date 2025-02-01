@@ -29,7 +29,7 @@ class App:
 
         @app.get('/htmx/initial-load.html')
         async def get_initial_load(request):
-            ssids = self.wifi.getAvailableSsids()
+            ssids = self.wifi.get_available_ssids()
 
             listOfSsids = ''
             if len(ssids) == 0:
@@ -49,5 +49,30 @@ class App:
             with open('web/htmx/initial-load.html') as f:
                 replacedText = f.read().replace('<!--wifi-list-->', listOfSsids)
                 return replacedText, 200;
+
+        @app.post('/htmx/wifi-auth')
+        async def post_wifi_auth(request):
+            ssid = request.form.get('ssid')
+            password = request.form.get('password')
+            Debug.log('Attempting authentication to ' + ssid + ' with password ' + password)
+
+            if self.wifi.provision(ssid, password):
+                request.g.restart = True
+
+                content = """
+                    <script>
+                        alert("Success fully connected to wifi {0}. You will be redirected to the device on your network now.");
+                        window.location.href='http://{1}';
+                    </script>
+                """.format(ssid, self.wifi.ip)
+            else:
+                content = """
+                    <script>
+                        alert('Unable to connect to this wifi connection with this password.');
+                        document.querySelector('#password').value = '';
+                    </script>
+                """
+
+            return content
 
         app.run(debug=True, port=80)
