@@ -22,3 +22,16 @@ class WifiSetup:
         self.access_point.active(True)
         self.access_point.config(essid = self.SSID, password = self.PASSWORD, authmode = self.AUTHMODE)
         Debug.log('Access point started')
+
+    def getAvailableSsids(self):
+        self.wifi_radio.active(True)
+        ssids = set()
+
+        for ssid, *_ in self.wifi_radio.scan():
+            decoded = ssid.decode('utf-8')
+            if decoded:
+                ssids.add(decoded)
+
+        self.wifi_radio.active(False)
+
+        return ssids
