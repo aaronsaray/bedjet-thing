@@ -18,7 +18,7 @@ class App:
             return send_file('web/index.html')
 
         @app.get('/favicon.ico')
-        async def get_favicon(request, path):
+        async def get_favicon(request):
             return send_file('web/favicon.ico', max_age=86400)
 
         @app.get('/assets/<path:path>')
@@ -29,43 +29,10 @@ class App:
 
         @app.get('/htmx/initial-load')
         async def get_initial_load(request):
-            ssids = self.wifi.get_available_ssids()
-
-            listOfSsids = ''
-            if len(ssids) == 0:
-                listOfSsids = '<div style="text-align: center; font-weight: bold; color: red">No WiFi is within range or discoverable.</div>'
+            if self.wifi.connected_to_wifi:
+                return self.output_bluetooth_connect()
             else:
-                def toHtml(ssid):
-                    return """
-                        <a href="#" hx-on:click="
-                            document.querySelector('#ssid').value = '{0}';
-                            document.querySelector('dialog').showModal();
-                        ">
-                            {0}
-                        </a>
-                        """.format(ssid.replace("'", "&quot;"))
-                listOfSsids = ''.join(map(toHtml, ssids))
-                listOfSsids += """
-                    <dialog>
-                        <form hx-post="/htmx/wifi-auth" hx-indicator="#wifi-auth-button" hx-target="#wifi-response">
-                            <div id="form-container">
-                                <label for="ssid">SSID:</label> 
-                                <input type="text" readonly name="ssid" id="ssid" />
-                                <label for="password">WiFi Password:</label>
-                                <input type="password" name="password" id="password" autofocus required style="border-radius: none" />
-                                <button type="submit" id="wifi-auth-button">Connect</button>
-                                <div id="cancel">
-                                    <a href="#" id="go-back" hx-on:click="document.querySelector('dialog').close()">Cancel</a>
-                                </div>
-                            </div>
-                            <div id="wifi-response"></div>
-                        </form>
-                    </dialog>
-                """
-
-            with open('web/htmx-templates/wifi-list.html') as f:
-                replacedText = f.read().replace('<!--wifi-list-->', listOfSsids)
-                return replacedText, 200;
+                return self.output_wifi_list()
 
         @app.post('/htmx/wifi-auth')
         async def post_wifi_auth(request):
@@ -93,3 +60,48 @@ class App:
             return content
 
         app.run(debug=True, port=80)
+
+    def output_wifi_list(self):
+        ssids = self.wifi.get_available_ssids()
+
+        listOfSsids = ''
+        if len(ssids) == 0:
+            listOfSsids = '<div style="text-align: center; font-weight: bold; color: red">No WiFi is within range or discoverable.</div>'
+        else:
+            def toHtml(ssid):
+                return """
+                    <a href="#" hx-on:click="
+                        document.querySelector('#ssid').value = '{0}';
+                        document.querySelector('dialog').showModal();
+                    ">
+                        {0}
+                    </a>
+                    """.format(ssid.replace("'", "&quot;"))
+            listOfSsids = ''.join(map(toHtml, ssids))
+            listOfSsids += """
+                <dialog>
+                    <form hx-post="/htmx/wifi-auth" hx-indicator="#wifi-auth-button" hx-target="#wifi-response">
+                        <div id="form-container">
+                            <label for="ssid">SSID:</label> 
+                            <input type="text" readonly name="ssid" id="ssid" />
+                            <label for="password">WiFi Password:</label>
+                            <input type="password" name="password" id="password" autofocus required style="border-radius: none" />
+                            <button type="submit" id="wifi-auth-button">Connect</button>
+                            <div id="cancel">
+                                <a href="#" id="go-back" hx-on:click="document.querySelector('dialog').close()">Cancel</a>
+                            </div>
+                        </div>
+                        <div id="wifi-response"></div>
+                    </form>
+                </dialog>
+            """
+
+        with open('web/htmx-templates/wifi-list.html') as f:
+            replacedText = f.read().replace('<!--wifi-list-->', listOfSsids)
+        return replacedText, 200;
+
+    def output_bluetooth_connect(self):
+        with open('web/htmx-templates/bluetooth-connect.html') as f:
+            content = f.read()
+        
+        return content, 200;
