@@ -1,0 +1,15 @@
+<h1>First time configuration. Welcome!</h1>
+<section>
+    <h2>Configure WiFi</h2>
+    <div id="panel">
+        <div id="panel-header">
+            <div>
+                Choose your WiFi connection from the list.
+            </div>
+            <div>
+                <a href="#" hx-get="/htmx/initial-load.html" hx-target="main">Refresh</a>
+            </div>
+        </div>
+        {{wifi-list}}
+    </div>
+</section>

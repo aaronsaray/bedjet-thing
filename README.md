@@ -31,7 +31,14 @@ mpy-cross -march=xtensawin microdot.py ---- this made microdot.mpy and saved ram
 
 ## Packages
 
-Install mpremote with pipx install mpremote
+Install mpremote with `pipx install mpremote`
 
-Then, mpremote mip install aioble-central and mpremote mip install aioble-client
+Then, `mpremote mip install aioble-central` and `mpremote mip install aioble-client`
 
+## Shell
+
+`rshell -p /dev/tty.usbserial-0001 repl`
+
+## Visit site on default
+
+http://192.168.4.1

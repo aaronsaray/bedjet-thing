@@ -3,5 +3,6 @@ from bedjet_thing.wifi_setup import WifiSetup
 from bedjet_thing.app import App
 
 status_led.action()
+WifiSetup()
 App()
 status_led.done()
