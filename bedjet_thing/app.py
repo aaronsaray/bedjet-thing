@@ -31,7 +31,15 @@ class App:
 
         @app.get('/htmx/initial-load')
         async def get_initial_load(request):
-            if self.wifi.connected_to_wifi:
+            
+            Debug.log('Initial load debug')
+            Debug(self.config)
+            Debug(self.config.has_bluetooth)
+            Debug.log('Initial load debug end')
+
+            if self.config.has_bluetooth:
+                return self.output_bluetooth_functionality()
+            elif self.config.has_wifi:
                 return self.output_bluetooth_connect()
             else:
                 return self.output_wifi_list()
@@ -63,8 +71,23 @@ class App:
         
         @app.post('/htmx/connect-to-bluetooth')
         async def connect_to_bluetooth(request):
+
+############################################################################################################################### HELP???? ######################################################
+# It seems to 'work', the file is written, but then it doesn't serve anything after being refreshed (44b files are served... or just pending)
+# obviously this has something to do with me not understanding async yet in python
+# Perhaps I should just issue a machine.reset()?
+############################################################################################################################### HELP???? ######################################################
+
             if await self.bluetooth.provision():
-                content = "You did it!"
+                content = """
+                    <div>
+                        Please wait...
+                    </div>
+                    <script>
+                        alert("Successfully connected to BedJet. Reloading BedJetThing");
+                        window.location.reload();
+                    </script>
+                """, 200, {'Connection': 'close'}
             else:
                 content = """
                     <div id="panel-header">
@@ -76,7 +99,8 @@ class App:
                         <button onclick="document.querySelector('.error-message').style.display='none'" id="bluetooth-connect-button" hx-post="/htmx/connect-to-bluetooth" hx-target="#panel" hx-indicator="#bluetooth-connect-button">Connect to BedJet</button>
                     </div>
                     <div class="error-message">
-                        Unable to connect to BedJet. Is it it on? Within range? A BedJet 3? Not Broken? Have you done a rain dance?
+                        Unable to connect to BedJet. Is it it on? Within range? A BedJet 3? Not Broken? Have you done a rain dance?<br>
+                        Also remember that if you have another BT device connected, it must be disconnected.
                     </div>
                 """
 
@@ -128,3 +152,6 @@ class App:
             content = f.read()
         
         return content, 200;
+
+    def output_bluetooth_functionality(self):
+        return "<div style='background:white'>I am bt functionality</div>", 200;

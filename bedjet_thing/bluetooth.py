@@ -6,12 +6,19 @@ class Bluetooth:
         self.config = config
 
     async def provision(self):
-        async with aioble.scan(duration_ms=5000, interval_us=30000, window_us=30000, active=True) as scanner:
+        found = False
+
+        async with aioble.scan(duration_ms=3000, interval_us=30000, window_us=30000, active=True) as scanner:
             async for result in scanner:
                 if result.name() is 'BEDJET_V3':
-                    Debug.log('Found bedjet')
-                    Debug.log(result)
-                    return True
+                    found = result.device.addr
 
-        Debug.log('Not found')
-        return False
+        if found:
+            Debug.log('Found Bluetooth: ' + found.hex())
+            Debug.log(found)
+            self.config.store_bluetooth(found)
+            return True
+        else:
+            Debug.log('Did not find bluetooth')
+            return False
+        

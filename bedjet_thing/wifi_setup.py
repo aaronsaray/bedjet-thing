@@ -10,7 +10,6 @@ class WifiSetup:
     AUTHMODE = 3
 
     ip = ''
-    connected_to_wifi = False
 
     def __init__(self, config):
         self.config = config
@@ -22,7 +21,6 @@ class WifiSetup:
     def start_wifi(self):
         if self.config.has_config:
             Debug.log('Has config: connecting to wifi')
-            self.connected_to_wifi = True
             self.connect_to_wifi()
         else:
             Debug.log('No config: starting access point')
@@ -77,6 +75,8 @@ class WifiSetup:
         return self.SETTINGS_FILE in os.listdir();
 
     def connect_to_wifi(self):
+        Debug.log('Connecting with ' + self.config.ssid + ' and ' + self.config.password)
+
         self.access_point.active(False)
 
         self.wifi_radio.active(True)
