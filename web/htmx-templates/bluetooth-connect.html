@@ -7,8 +7,8 @@
                 Make sure your BedJet is on and within range.
             </div>
         </div>
-        <p>
-            <button>Connect to BedJet</button>
-        </p>
+        <div>
+            <button id="bluetooth-connect-button" hx-post="/htmx/connect-to-bluetooth" hx-target="#panel" hx-indicator="#bluetooth-connect-button">Connect to BedJet</button>
+        </div>
     </div>
 </section>

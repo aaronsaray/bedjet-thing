@@ -1,6 +1,5 @@
 import network
 import time
-import json
 import os
 from time import sleep
 from bedjet_thing.debug import Debug
@@ -9,24 +8,24 @@ class WifiSetup:
     SSID = 'BedJetThing'
     PASSWORD = 'BedJetThing'
     AUTHMODE = 3
-    SETTINGS_FILE = 'bedjet-thing.json'
 
     ip = ''
     connected_to_wifi = False
 
-    def __init__(self):
+    def __init__(self, config):
+        self.config = config
         self.wifi_radio = network.WLAN(network.STA_IF)
         self.access_point = network.WLAN(network.AP_IF)
         network.hostname('BedJetThing')
         self.start_wifi()
 
     def start_wifi(self):
-        if self.has_settings_file():
-            Debug.log('Has settings file: connecting to wifi')
+        if self.config.has_config:
+            Debug.log('Has config: connecting to wifi')
             self.connected_to_wifi = True
             self.connect_to_wifi()
         else:
-            Debug.log('No settings file: starting access point')
+            Debug.log('No config: starting access point')
             self.start_access_point()
     
     def start_access_point(self):
@@ -62,10 +61,7 @@ class WifiSetup:
 
                 self.ip = self.wifi_radio.ifconfig()[0]
 
-                content = json.dumps({'ssid': ssid, 'password': password})
-                file = open(self.SETTINGS_FILE, 'w')
-                file.write(content)
-                file.close()
+                self.config.store_wifi(ssid, password)
                 
                 return True
             else:
@@ -83,10 +79,8 @@ class WifiSetup:
     def connect_to_wifi(self):
         self.access_point.active(False)
 
-        file = open(self.SETTINGS_FILE, 'r')
-        c = json.load(file)
         self.wifi_radio.active(True)
-        self.wifi_radio.connect(c['ssid'], c['password'])
+        self.wifi_radio.connect(self.config.ssid, self.config.password)
 
         while not self.wifi_radio.isconnected():
             sleep(0.1)

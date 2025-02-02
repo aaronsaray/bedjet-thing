@@ -2,7 +2,8 @@ from bedjet_thing.microdot import Microdot, send_file
 from bedjet_thing.debug import Debug
 
 class App:
-    def __init__(self, wifi):
+    def __init__(self, config, wifi):
+        self.config = config
         self.wifi = wifi
 
         # must be the last thing
@@ -58,6 +59,23 @@ class App:
                 """
 
             return content
+        
+        @app.post('/htmx/connect-to-bluetooth')
+        async def connect_to_bluetooth(request):
+            content = """
+                <div id="panel-header">
+                    <div>
+                        Make sure your BedJet is on and within range.
+                    </div>
+                </div>
+                <div>
+                    <button id="bluetooth-connect-button" hx-post="/htmx/connect-to-bluetooth" hx-target="#panel" hx-indicator="#bluetooth-connect-button">Connect to BedJet</button>
+                </div>
+                <div class="error-message">
+                    Unable to connect to BedJet. Is it it on? Within range? A BedJet 3? Not Broken? Have you done a rain dance?
+                </div>
+            """
+            return content
 
         app.run(debug=True, port=80)
 
@@ -66,7 +84,7 @@ class App:
 
         listOfSsids = ''
         if len(ssids) == 0:
-            listOfSsids = '<div style="text-align: center; font-weight: bold; color: red">No WiFi is within range or discoverable.</div>'
+            listOfSsids = '<div class="error-message">No WiFi is within range or discoverable.</div>'
         else:
             def toHtml(ssid):
                 return """
