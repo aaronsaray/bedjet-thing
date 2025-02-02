@@ -1,7 +1,10 @@
+import machine
 from bedjet_thing.microdot import Microdot, send_file
 from bedjet_thing.debug import Debug
 
 class App:
+    reset_device = False
+
     def __init__(self, config, wifi, bluetooth):
         self.config = config
         self.wifi = wifi
@@ -106,6 +109,22 @@ class App:
 
             return content
 
+        @app.delete('/htmx/reset')
+        async def reset_device(request):
+            self.reset_device = True
+            self.config.clear()
+
+            with open('web/htmx-templates/reset-notification.html') as f:
+                content = f.read()
+        
+            return content, 200;
+
+        @app.after_request
+        def after_request_handler(request, response):
+            if self.reset_device:
+                Debug.log('Restarting...')
+                machine.reset()
+
         app.run(debug=True, port=80)
 
     def output_wifi_list(self):
@@ -154,4 +173,7 @@ class App:
         return content, 200;
 
     def output_bluetooth_functionality(self):
-        return "<div style='background:white'>I am bt functionality</div>", 200;
+        with open('web/htmx-templates/bluetooth-connected.html') as f:
+            content = f.read()
+        
+        return content, 200;

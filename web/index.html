@@ -40,6 +40,16 @@
             border-radius: 0.3rem;
             text-transform: uppercase;
         }
+        header a {
+            position: absolute;
+            right: 0.5rem;
+            top: 1rem;
+            opacity: 0.7
+        }
+        header a:hover {
+            opacity: 1;
+        }
+        
         h1 {
             text-transform: uppercase;
             background-color: #00aaef;
@@ -171,6 +181,7 @@
     <header>
         <img src="assets/logo-full.png" alt="logo">
         <span>Thing</span>
+        <a href="#" hx-delete="/htmx/reset" hx-confirm="Are you sure you want to reset the device? All settings will be lost.">⚠️</a>
     </header>
     <main hx-get="/htmx/initial-load" hx-trigger="load">
         <div class="loading" style="padding: 1rem; color: #fff; text-align: center">Loading...</div>

@@ -47,3 +47,6 @@ class Config:
         with open(self.CONFIG_FILE, 'w') as f:
             json.dump(data, f)
             f.close()
+
+    def clear(self): 
+        os.unlink(self.CONFIG_FILE)
