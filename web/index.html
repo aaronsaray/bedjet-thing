@@ -145,6 +145,15 @@
         button:hover {
             background-color: #f35500;
         }
+        button.htmx-request {
+            cursor: wait;
+            pointer-events: none;
+            background-color: #777;
+        }
+        button.htmx-request::after {
+            content: '...';
+            animation: loading 1s infinite;
+        }    
 
         #cancel {
             text-align: end;
@@ -155,16 +164,6 @@
             font-size: 0.9rem;
             text-decoration: none;
         }
-
-        #wifi-auth-button.htmx-request {
-            cursor: wait;
-            pointer-events: none;
-            background-color: #777;
-        }
-        #wifi-auth-button.htmx-request::after {
-            content: '...';
-            animation: loading 1s infinite;
-        }    
     </style>
     <script src="assets/htmx.min.js"></script>
 </head>

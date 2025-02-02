@@ -2,9 +2,10 @@ from bedjet_thing.microdot import Microdot, send_file
 from bedjet_thing.debug import Debug
 
 class App:
-    def __init__(self, config, wifi):
+    def __init__(self, config, wifi, bluetooth):
         self.config = config
         self.wifi = wifi
+        self.bluetooth = bluetooth
 
         # must be the last thing
         self.start_microdot()
@@ -62,19 +63,23 @@ class App:
         
         @app.post('/htmx/connect-to-bluetooth')
         async def connect_to_bluetooth(request):
-            content = """
-                <div id="panel-header">
-                    <div>
-                        Make sure your BedJet is on and within range.
+            if await self.bluetooth.provision():
+                content = "You did it!"
+            else:
+                content = """
+                    <div id="panel-header">
+                        <div>
+                            Make sure your BedJet is on and within range.
+                        </div>
                     </div>
-                </div>
-                <div>
-                    <button id="bluetooth-connect-button" hx-post="/htmx/connect-to-bluetooth" hx-target="#panel" hx-indicator="#bluetooth-connect-button">Connect to BedJet</button>
-                </div>
-                <div class="error-message">
-                    Unable to connect to BedJet. Is it it on? Within range? A BedJet 3? Not Broken? Have you done a rain dance?
-                </div>
-            """
+                    <div>
+                        <button onclick="document.querySelector('.error-message').style.display='none'" id="bluetooth-connect-button" hx-post="/htmx/connect-to-bluetooth" hx-target="#panel" hx-indicator="#bluetooth-connect-button">Connect to BedJet</button>
+                    </div>
+                    <div class="error-message">
+                        Unable to connect to BedJet. Is it it on? Within range? A BedJet 3? Not Broken? Have you done a rain dance?
+                    </div>
+                """
+
             return content
 
         app.run(debug=True, port=80)
