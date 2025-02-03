@@ -1,60 +1,88 @@
-import os
 import network
-import json
+import time
+import os
 from time import sleep
+from bedjet_thing.debug import Debug
 
 class WifiSetup:
-    SETTINGS_FILE = 'bedjet-thing.json'
     SSID = 'BedJetThing'
     PASSWORD = 'BedJetThing'
     AUTHMODE = 3
 
-    def __init__(self):
+    ip = ''
+
+    def __init__(self, config):
+        self.config = config
         self.wifi_radio = network.WLAN(network.STA_IF)
         self.access_point = network.WLAN(network.AP_IF)
         network.hostname('BedJetThing')
         self.start_wifi()
 
-    def debug(self, message):
-        print('DEBUG: ', end='')
-        print(message)
-
     def start_wifi(self):
-        if self.has_settings_file():
-            self.debug('has settings file')
+        if self.config.has_config:
+            Debug.log('Has config: connecting to wifi')
             self.connect_to_wifi()
         else:
-            self.debug('no settings file')
+            Debug.log('No config: starting access point')
             self.start_access_point()
-
-    def has_settings_file(self):
-        return self.SETTINGS_FILE in os.listdir();
-
-    def write_credentials(self, ssid, password):
-        content = json.dumps({'ssid': ssid, 'password': password})
-        file = open(self.SETTINGS_FILE, 'w')
-        file.write(content)
-        file.close()
-
-    def clear_credentials(self):
-        os.remove(self.SETTINGS_FILE)
-
+    
     def start_access_point(self):
         self.wifi_radio.active(False) # disconnect    
 
         self.access_point.active(True)
         self.access_point.config(essid = self.SSID, password = self.PASSWORD, authmode = self.AUTHMODE)
-        self.debug('access point started')
+        Debug.log('Access point started')
+
+    def get_available_ssids(self):
+        self.wifi_radio.active(True)
+        ssids = set()
+
+        for ssid, *_ in self.wifi_radio.scan():
+            decoded = ssid.decode('utf-8')
+            if decoded:
+                ssids.add(decoded)
+
+        self.wifi_radio.active(False)
+
+        return ssids
+    
+    def provision(self, ssid, password):
+        Debug.log('Attempting to connect to ssid ' + ssid)
+
+        self.wifi_radio.active(True)
+        self.wifi_radio.connect(ssid, password)
+        
+        for _ in range(100):
+            if self.wifi_radio.isconnected():
+                Debug.log('Connected to wifi')
+                Debug.log(self.wifi_radio.ifconfig())
+
+                self.ip = self.wifi_radio.ifconfig()[0]
+
+                self.config.store_wifi(ssid, password)
+                
+                return True
+            else:
+                time.sleep_ms(100)
+        
+        Debug.log('Unable to connect')        
+        
+        self.wifi_radio.disconnect()
+        self.wifi_radio.active(False)
+        return False
+
+    def has_settings_file(self):
+        return self.SETTINGS_FILE in os.listdir();
 
     def connect_to_wifi(self):
+        Debug.log('Connecting with ' + self.config.ssid + ' and ' + self.config.password)
+
         self.access_point.active(False)
 
-        file = open(self.SETTINGS_FILE, 'r')
-        c = json.load(file)
         self.wifi_radio.active(True)
-        self.wifi_radio.connect(c['ssid'], c['password'])
+        self.wifi_radio.connect(self.config.ssid, self.config.password)
 
         while not self.wifi_radio.isconnected():
             sleep(0.1)
 
-        self.debug('wifi connected: ' + self.wifi_radio.ifconfig()[0])
+        Debug.log('wifi connected: ' + self.wifi_radio.ifconfig()[0])

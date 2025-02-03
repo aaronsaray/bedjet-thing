@@ -6,16 +6,23 @@
     <title>BedJet Thing Configuration</title>
     <link rel="preload" as="image" href="assets/stars-bg.jpg">
     <style>
+        html {
+            min-height: 100svh;
+        }
         body {
             display: flex;
             flex-direction: column;
-            min-height: 100vh;
+            min-height: 100svh;
             margin: 0;
             font-family:system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+            background-image: url('assets/stars-bg.jpg');
+            background-repeat: no-repeat;
+            background-size: cover;
         }
         header {
             text-align: center;
             padding: 0.7rem 0.5rem 0.5rem 0.5rem;
+            background: #ffffff;
         }
         header img {
             height: 3rem;
@@ -33,6 +40,16 @@
             border-radius: 0.3rem;
             text-transform: uppercase;
         }
+        header a {
+            position: absolute;
+            right: 0.5rem;
+            top: 1rem;
+            opacity: 0.7
+        }
+        header a:hover {
+            opacity: 1;
+        }
+        
         h1 {
             text-transform: uppercase;
             background-color: #00aaef;
@@ -46,8 +63,6 @@
         }
         main {
             flex-grow: 1;
-            background-image: url('assets/stars-bg.jpg');
-            background-repeat: no-repeat;
         }
         h2 {
             margin-top: 0;
@@ -77,6 +92,12 @@
             text-align: center;
             font-weight: bold;
             animation: loading 1s infinite;
+        }
+        .error-message {
+            text-align: center; 
+            font-weight: bold; 
+            color: red;
+            margin-top: 1rem;
         }
         @keyframes loading {
             0% {
@@ -134,6 +155,15 @@
         button:hover {
             background-color: #f35500;
         }
+        button.htmx-request {
+            cursor: wait;
+            pointer-events: none;
+            background-color: #777;
+        }
+        button.htmx-request::after {
+            content: '...';
+            animation: loading 1s infinite;
+        }    
 
         #cancel {
             text-align: end;
@@ -144,17 +174,6 @@
             font-size: 0.9rem;
             text-decoration: none;
         }
-
-        #wifi-auth-button.htmx-request {
-            cursor: wait;
-            pointer-events: none;
-            background-color: #777;
-        }
-        #wifi-auth-button.htmx-request::after {
-            content: '...';
-            animation: loading 1s infinite;
-        }
-    
     </style>
     <script src="assets/htmx.min.js"></script>
 </head>
@@ -162,6 +181,7 @@
     <header>
         <img src="assets/logo-full.png" alt="logo">
         <span>Thing</span>
+        <a href="#" hx-delete="/htmx/reset" hx-confirm="Are you sure you want to reset the device? All settings will be lost.">⚠️</a>
     </header>
     <main hx-get="/htmx/initial-load" hx-trigger="load">
         <div class="loading" style="padding: 1rem; color: #fff; text-align: center">Loading...</div>

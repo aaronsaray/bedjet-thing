@@ -1,211 +1,179 @@
-from bedjet_thing.microdot import Microdot, send_file
-import time
 import machine
+from bedjet_thing.microdot import Microdot, send_file
+from bedjet_thing.debug import Debug
 
 class App:
-    def __init__(self, wifi_radio, write_credentials, clear_credentials):
-        self.wifi_radio = wifi_radio
-        self.write_credentials = write_credentials
-        self.clear_credentials = clear_credentials
-        self.ip = None
-        self.restart = False
+    reset_device = False
+
+    def __init__(self, config, wifi, bluetooth):
+        self.config = config
+        self.wifi = wifi
+        self.bluetooth = bluetooth
+
+        # must be the last thing
         self.start_microdot()
 
-    def debug(self, message):
-        print('DEBUG: ', end='')
-        print(message)
-
     def start_microdot(self):
-        self.debug('starting microdot')
+        Debug.log('Starting microdot')
 
         app = Microdot()
 
         @app.get('/')
         async def index(request):
-            if self.wifi_radio.isconnected():
-                return send_file('web/running.html')
-            
             return send_file('web/index.html')
 
+        @app.get('/favicon.ico')
+        async def get_favicon(request):
+            return send_file('web/favicon.ico', max_age=86400)
+
+        @app.get('/assets/<path:path>')
+        async def get_asset(request, path):
+            if '..' in path:
+                return 'Not found', 404
+            return send_file('web/assets/' + path, max_age=86400)
+
         @app.get('/htmx/initial-load')
-        async def initial_load(request):
-            start_part = """
-                <h1>First time configuration. Welcome!</h1>
-                <section>
-                    <h2>Configure WiFi</h2>
-                    <div id="panel">
-                        <div id="panel-header">
-                            <div>
-                                Choose your WiFi connection from the list.
-                            </div>
-                            <div>
-                                <a href="#" hx-get="/htmx/initial-load" hx-target="main">Refresh</a>
-                            </div>
-                        </div>
-            """
-            end_part = """
-                    </div>
-                </section>
-            """
+        async def get_initial_load(request):
+            
+            Debug.log('Initial load debug')
+            Debug(self.config)
+            Debug(self.config.has_bluetooth)
+            Debug.log('Initial load debug end')
 
-            self.wifi_radio.active(True)
-            ssid_collection = ''
-            ssids = set()
-
-            for ssid, *_ in self.get_wifi().scan():
-                decoded = ssid.decode('utf-8')
-                if decoded:
-                    ssids.add(decoded)
-
-            self.wifi_radio.active(False)
-
-            self.debug(ssids)
-
-            for s in ssids:
-                if s == 'MyWiFi2' or s == 'MonkFish': # need to figure out how to escape shit
-                    ssid_collection = ssid_collection + """
-                        <a href="#" hx-on:click="
-                            document.querySelector('#ssid').value = '{0}';
-                            document.querySelector('dialog').showModal();
-                        ">
-                            {0}
-                        </a>
-                    """.format(s)
-
-            if ssid_collection == '':
-                internal = '<div style="text-align: center; font-weight: bold; color: red">No WiFi is within range or discoverable.</div>'
+            if self.config.has_bluetooth:
+                return self.output_bluetooth_functionality()
+            elif self.config.has_wifi:
+                return self.output_bluetooth_connect()
             else:
-                internal = '<div id="wifi-list">' + ssid_collection + '</div>' + """
-                    <dialog>
-                        <form hx-post="/htmx/wifi-auth" hx-indicator="#wifi-auth-button">
-                            <div id="form-container">
-                                <label for="ssid">SSID:</label> 
-                                <input type="text" readonly name="ssid" id="ssid" />
-                                <label for="password">WiFi Password:</label>
-                                <input type="password" name="password" id="password" autofocus required style="border-radius: none" />
-                                <button type="submit" id="wifi-auth-button">Connect</button>
-                                <div id="cancel">
-                                    <a href="#" id="go-back" hx-on:click="document.querySelector('dialog').close()">Cancel</a>
-                                </div>
-                            </div>
-                        </form>
-                    </dialog>
-                    """
-
-            return start_part + internal + end_part;
+                return self.output_wifi_list()
 
         @app.post('/htmx/wifi-auth')
-        async def wifi_auth(request):
+        async def post_wifi_auth(request):
             ssid = request.form.get('ssid')
             password = request.form.get('password')
+            Debug.log('Attempting authentication to ' + ssid + ' with password ' + password)
 
-            if self.wifi_connect(ssid, password):
+            if self.wifi.provision(ssid, password):
+                request.g.restart = True
+
                 content = """
-                    <div class="padding: 1rem">
-                        <div style="color: green; font-weight: bold">
-                            Successfully connected.
-                        </div>
-                        <p>
-                            Please wait a moment. Disconnecting from BedJetThing and returning to the previous connection.
-                        </p>
-                    </div>
                     <script>
-                        setTimeout(() => {{
-                            window.location.href="http://{0}";
-                        }}, 10000);
+                        alert("Success fully connected to wifi {0}. You will be redirected to the device on your network now.");
+                        window.location.href='http://{1}';
                     </script>
-                """.format(self.ip)
+                """.format(ssid, self.wifi.ip)
             else:
                 content = """
-                    <div style="color: red; font-weight: bold; margin-bottom: 1rem">
-                        Can not connect. Perhaps the password is incorrect?
-                    </div>
-                    <div id="form-container">
-                        <label for="ssid">SSID:</label> 
-                        <input type="text" readonly name="ssid" id="ssid" value="{0}" />
-                        <label for="password">WiFi Password:</label>
-                        <input type="password" name="password" id="password" autofocus required style="border-radius: none" />
-                        <button type="submit" id="wifi-auth-button">Connect</button>
-                        <div id="cancel">
-                            <a href="#" id="go-back" hx-on:click="document.querySelector('dialog').close()">Cancel</a>
-                        </div>
-                    </div>
-                """.format(ssid)
+                    <script>
+                        alert('Unable to connect to this wifi connection with this password.');
+                        document.querySelector('#password').value = '';
+                    </script>
+                """
 
             return content
+        
+        @app.post('/htmx/connect-to-bluetooth')
+        async def connect_to_bluetooth(request):
 
-        @app.get('/htmx/running')
-        async def running(request):
-            content = """
-                <h1>BedJet Thing is Running!</h1>
-                <section>
-                    <h2>Control BedJet</h2>
-                    <div id="panel">
-                        <fieldset>
-                            <legend>Fan</legend>
-                            <div>
-                                <label><input type="radio" name="fan" value="off" checked> Off</label>
-                                <label><input type="radio" name="fan" value="off"> Cool</label>
-                                <label><input type="radio" name="fan" value="off"> Heat</label>        
-                            </div>
-                        </fieldset>
-                        <fieldset>
-                            <legend>WiFi</legend>
-                            <div>
-                                <a href="#" hx-delete="/htmx/reset" hx-confirm="Are you sure you'd like to reset the device?" style="color: red">Reset BedJet Thing</a>   
-                            </div>
-                        </fieldset>
+############################################################################################################################### HELP???? ######################################################
+# It seems to 'work', the file is written, but then it doesn't serve anything after being refreshed (44b files are served... or just pending)
+# obviously this has something to do with me not understanding async yet in python
+# Perhaps I should just issue a machine.reset()?
+############################################################################################################################### HELP???? ######################################################
+
+            if await self.bluetooth.provision():
+                content = """
+                    <div>
+                        Please wait...
                     </div>
-                </section>
-            """
+                    <script>
+                        alert("Successfully connected to BedJet. Reloading BedJetThing");
+                        window.location.reload();
+                    </script>
+                """, 200, {'Connection': 'close'}
+            else:
+                content = """
+                    <div id="panel-header">
+                        <div>
+                            Make sure your BedJet is on and within range.
+                        </div>
+                    </div>
+                    <div>
+                        <button onclick="document.querySelector('.error-message').style.display='none'" id="bluetooth-connect-button" hx-post="/htmx/connect-to-bluetooth" hx-target="#panel" hx-indicator="#bluetooth-connect-button">Connect to BedJet</button>
+                    </div>
+                    <div class="error-message">
+                        Unable to connect to BedJet. Is it it on? Within range? A BedJet 3? Not Broken? Have you done a rain dance?<br>
+                        Also remember that if you have another BT device connected, it must be disconnected.
+                    </div>
+                """
 
             return content
 
         @app.delete('/htmx/reset')
-        async def resetDevice(request):
-            self.debug('Device reset')
-            self.clear_credentials()
-            machine.reset()
+        async def reset_device(request):
+            self.reset_device = True
+            self.config.clear()
 
-        @app.get('/favicon.ico')
-        async def favicon(request, path):
-            return send_file('web/favicon.ico', max_age=86400)
-
-        @app.get('/assets/<path:path>')
-        async def web(request, path):
-            if '..' in path:
-                return 'Not found', 404
-            return send_file('web/assets/' + path, max_age=86400)
+            with open('web/htmx-templates/reset-notification.html') as f:
+                content = f.read()
         
+            return content, 200;
+
         @app.after_request
-        def restart_device(request, response):
-            if self.restart:
-                self.debug('Restarting...')
+        def after_request_handler(request, response):
+            if self.reset_device:
+                Debug.log('Restarting...')
                 machine.reset()
 
         app.run(debug=True, port=80)
 
+    def output_wifi_list(self):
+        ssids = self.wifi.get_available_ssids()
 
-    def wifi_connect(self, ssid, password):
-        self.debug('Trying to connect to: ' + ssid)
-        
-        self.wifi_radio.active(True)
-        self.wifi_radio.connect(ssid, password)
-        
-        for _ in range(100):
-            if self.wifi_radio.isconnected():
-                self.debug('Connected to wifi')
-                self.debug(self.wifi_radio.ifconfig())
-                self.write_credentials(ssid, password)
-                self.restart = True;
-                self.ip = self.wifi_radio.ifconfig()[0]
-                return True
-            else:
-                time.sleep_ms(100)
-        
-        self.debug('Unable to connect')        
-        
-        self.wifi_radio.disconnect()
-        self.wifi_radio.active(False)
+        listOfSsids = ''
+        if len(ssids) == 0:
+            listOfSsids = '<div class="error-message">No WiFi is within range or discoverable.</div>'
+        else:
+            def toHtml(ssid):
+                return """
+                    <a href="#" hx-on:click="
+                        document.querySelector('#ssid').value = '{0}';
+                        document.querySelector('dialog').showModal();
+                    ">
+                        {0}
+                    </a>
+                    """.format(ssid.replace("'", "&quot;"))
+            listOfSsids = ''.join(map(toHtml, ssids))
+            listOfSsids += """
+                <dialog>
+                    <form hx-post="/htmx/wifi-auth" hx-indicator="#wifi-auth-button" hx-target="#wifi-response">
+                        <div id="form-container">
+                            <label for="ssid">SSID:</label> 
+                            <input type="text" readonly name="ssid" id="ssid" />
+                            <label for="password">WiFi Password:</label>
+                            <input type="password" name="password" id="password" autofocus required style="border-radius: none" />
+                            <button type="submit" id="wifi-auth-button">Connect</button>
+                            <div id="cancel">
+                                <a href="#" id="go-back" hx-on:click="document.querySelector('dialog').close()">Cancel</a>
+                            </div>
+                        </div>
+                        <div id="wifi-response"></div>
+                    </form>
+                </dialog>
+            """
 
-        return False
+        with open('web/htmx-templates/wifi-list.html') as f:
+            replacedText = f.read().replace('<!--wifi-list-->', listOfSsids)
+        return replacedText, 200;
+
+    def output_bluetooth_connect(self):
+        with open('web/htmx-templates/bluetooth-connect.html') as f:
+            content = f.read()
+        
+        return content, 200;
+
+    def output_bluetooth_functionality(self):
+        with open('web/htmx-templates/bluetooth-connected.html') as f:
+            content = f.read()
+        
+        return content, 200;
