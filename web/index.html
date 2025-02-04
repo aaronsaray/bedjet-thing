@@ -181,7 +181,7 @@
     <header>
         <img src="assets/logo-full.png" alt="logo">
         <span>Thing</span>
-        <a href="#" hx-delete="/htmx/reset" hx-confirm="Are you sure you want to reset the device? All settings will be lost.">⚠️</a>
+        <a href="#" hx-delete="/htmx/reset" hx-target="main" hx-confirm="Are you sure you want to reset the device? All settings will be lost.">⚠️</a>
     </header>
     <main hx-get="/htmx/initial-load" hx-trigger="load">
         <div class="loading" style="padding: 1rem; color: #fff; text-align: center">Loading...</div>

@@ -47,7 +47,7 @@ http://192.168.4.1
 
 ### Remaining Tasks
 
-- [ ] Figure out why it crashes after every 'action' that writes to the filesystem - something to do with the response I'm guessing
+- [ ] Figure out why it crashes after the await for BT provision
 - [ ] BT Functionality
     - [ ] attempt to connect
     - [ ] success, show name and ambient temp

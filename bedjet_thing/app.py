@@ -1,9 +1,11 @@
 import machine
+import asyncio
 from bedjet_thing.microdot import Microdot, send_file
 from bedjet_thing.debug import Debug
 
 class App:
     reset_device = False
+    clear_config = False
 
     def __init__(self, config, wifi, bluetooth):
         self.config = config
@@ -34,12 +36,6 @@ class App:
 
         @app.get('/htmx/initial-load')
         async def get_initial_load(request):
-            
-            Debug.log('Initial load debug')
-            Debug(self.config)
-            Debug(self.config.has_bluetooth)
-            Debug.log('Initial load debug end')
-
             if self.config.has_bluetooth:
                 return self.output_bluetooth_functionality()
             elif self.config.has_wifi:
@@ -54,8 +50,7 @@ class App:
             Debug.log('Attempting authentication to ' + ssid + ' with password ' + password)
 
             if self.wifi.provision(ssid, password):
-                request.g.restart = True
-
+                self.reset_device = True
                 content = """
                     <script>
                         alert("Success fully connected to wifi {0}. You will be redirected to the device on your network now.");
@@ -74,6 +69,9 @@ class App:
         
         @app.post('/htmx/connect-to-bluetooth')
         async def connect_to_bluetooth(request):
+
+### This is failing - if successful, it writes. If failure, it hangs. Either way, after the response is returned, nothing else works correctly
+### Think it has to do with the double await
 
 ############################################################################################################################### HELP???? ######################################################
 # It seems to 'work', the file is written, but then it doesn't serve anything after being refreshed (44b files are served... or just pending)
@@ -112,7 +110,7 @@ class App:
         @app.delete('/htmx/reset')
         async def reset_device(request):
             self.reset_device = True
-            self.config.clear()
+            self.clear_config = True
 
             with open('web/htmx-templates/reset-notification.html') as f:
                 content = f.read()
@@ -120,10 +118,17 @@ class App:
             return content, 200;
 
         @app.after_request
-        def after_request_handler(request, response):
+        async def after_request_handler(request, response):
             if self.reset_device:
-                Debug.log('Restarting...')
-                machine.reset()
+                async def worker(): 
+                    Debug.log('Clearing and restarting after 3 seconds...')
+                    await asyncio.sleep(3)
+                    if self.clear_config:
+                        self.config.clear()
+                    machine.reset()
+                
+                loop = asyncio.get_event_loop()
+                task = loop.create_task(worker())
 
         app.run(debug=True, port=80)
 
