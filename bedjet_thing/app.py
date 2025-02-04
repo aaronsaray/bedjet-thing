@@ -162,8 +162,19 @@ class App:
         return content, 200;
 
     def output_bluetooth_functionality(self):
-        with open('web/htmx-templates/bluetooth-connected.html') as f:
-            content = f.read()
-            f.close()
+        has_connected = True
+        fan_on = False
+        bedjet_name = 'BEDJETAX355'
+        bedjet_temp = '72'
+
+        if has_connected:
+            with open('web/htmx-templates/bluetooth-connected.html') as f:
+                content = f.read()
+                f.close()
+            content = content.replace('<!--fanon-->', 'checked' if fan_on else '').replace('<!--bedjetname-->', bedjet_name).replace('<!--ambientf-->', bedjet_temp)
+        else:
+            with open('web/htmx-templates/bluetooth-not-connected.html') as f:
+                content = f.read()
+                f.close()
         
         return content, 200;

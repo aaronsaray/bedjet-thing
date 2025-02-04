@@ -48,11 +48,8 @@ http://192.168.4.1
 ### Remaining Tasks
 
 - [ ] Figure out why it crashes after the await for BT provision
-- [ ] BT Functionality
-    - [ ] attempt to connect
-    - [ ] success, show name and ambient temp
+- [ ] BT Functionality connect on load (double await - same issue as above?)
 - [ ] Radio for Fan
-    - [ ] populate it on the screen
     - [ ] make a UI to toggle
     - [ ] Make an api end point to turn on fan
     - [ ] Make an api end point to turn off fan
