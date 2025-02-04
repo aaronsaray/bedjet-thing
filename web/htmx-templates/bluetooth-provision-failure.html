@@ -1,0 +1,12 @@
+<div id="panel-header">
+    <div>
+        Make sure your BedJet is on and within range.
+    </div>
+</div>
+<div>
+    <button onclick="document.querySelector('.error-message').style.display='none'" id="bluetooth-connect-button" hx-post="/htmx/connect-to-bluetooth" hx-target="#panel" hx-indicator="#bluetooth-connect-button">Connect to BedJet</button>
+</div>
+<div class="error-message">
+    Unable to connect to BedJet. Is it it on? Within range? A BedJet 3? Not Broken? Have you done a rain dance?<br>
+    Also remember that if you have another BT device connected, it must be disconnected.
+</div>

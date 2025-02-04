@@ -51,19 +51,16 @@ class App:
 
             if self.wifi.provision(ssid, password):
                 self.reset_device = True
-                content = """
-                    <script>
-                        alert("Success fully connected to wifi {0}. You will be redirected to the device on your network now.");
-                        window.location.href='http://{1}';
-                    </script>
-                """.format(ssid, self.wifi.ip)
+
+                with open('web/htmx-templates/wifi-auth-success.html') as f:
+                    content = f.read()
+                    f.close()
+
+                content = content.format(ssid, self.wifi.ip)
             else:
-                content = """
-                    <script>
-                        alert('Unable to connect to this wifi connection with this password.');
-                        document.querySelector('#password').value = '';
-                    </script>
-                """
+                with open('web/htmx-templates/wifi-auth-failure.html') as f:
+                    content = f.read()
+                    f.close()
 
             return content
         
@@ -80,30 +77,15 @@ class App:
 ############################################################################################################################### HELP???? ######################################################
 
             if await self.bluetooth.provision():
-                content = """
-                    <div>
-                        Please wait...
-                    </div>
-                    <script>
-                        alert("Successfully connected to BedJet. Reloading BedJetThing");
-                        window.location.reload();
-                    </script>
-                """, 200, {'Connection': 'close'}
+                with open('web/htmx-templates/bluetooth-provision-success.html') as f:
+                    content = f.read()
+                    f.close()
+
+                content = content, 200, {'Connection': 'close'}
             else:
-                content = """
-                    <div id="panel-header">
-                        <div>
-                            Make sure your BedJet is on and within range.
-                        </div>
-                    </div>
-                    <div>
-                        <button onclick="document.querySelector('.error-message').style.display='none'" id="bluetooth-connect-button" hx-post="/htmx/connect-to-bluetooth" hx-target="#panel" hx-indicator="#bluetooth-connect-button">Connect to BedJet</button>
-                    </div>
-                    <div class="error-message">
-                        Unable to connect to BedJet. Is it it on? Within range? A BedJet 3? Not Broken? Have you done a rain dance?<br>
-                        Also remember that if you have another BT device connected, it must be disconnected.
-                    </div>
-                """
+                with open('web/htmx-templates/bluetooth-provision-failure.html') as f:
+                    content = f.read()
+                    f.close()
 
             return content
 
@@ -114,6 +96,7 @@ class App:
 
             with open('web/htmx-templates/reset-notification.html') as f:
                 content = f.read()
+                f.close()
         
             return content, 200;
 
@@ -174,11 +157,13 @@ class App:
     def output_bluetooth_connect(self):
         with open('web/htmx-templates/bluetooth-connect.html') as f:
             content = f.read()
+            f.close()
         
         return content, 200;
 
     def output_bluetooth_functionality(self):
         with open('web/htmx-templates/bluetooth-connected.html') as f:
             content = f.read()
+            f.close()
         
         return content, 200;
