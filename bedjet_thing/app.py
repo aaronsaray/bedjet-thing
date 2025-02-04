@@ -100,6 +100,21 @@ class App:
         
             return content, 200;
 
+        @app.post('/api/fan/toggle')
+        async def fan_on(request):
+            # handle the bluetooth swap        
+            return '', 204;
+
+        @app.post('/api/fan/on')
+        async def fan_on(request):
+            # handle the bluetooth swap        
+            return '', 204;
+
+        @app.post('/api/fan/on')
+        async def fan_on(request):     
+            # handle the bt functionality   
+            return '', 204;
+
         @app.after_request
         async def after_request_handler(request, response):
             if self.reset_device:

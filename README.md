@@ -49,11 +49,8 @@ http://192.168.4.1
 
 - [ ] Figure out why it crashes after the await for BT provision
 - [ ] BT Functionality connect on load (double await - same issue as above?)
-- [ ] Radio for Fan
-    - [ ] make a UI to toggle
-    - [ ] Make an api end point to turn on fan
-    - [ ] Make an api end point to turn off fan
-    - [ ] Configure this in homekit
+- [ ] Configure API end points to control fan when toggled
+- [ ] Configure this in homekit
 - [ ] Create demo
 
 ### References
