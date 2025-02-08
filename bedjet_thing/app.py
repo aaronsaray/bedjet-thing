@@ -66,22 +66,10 @@ class App:
         
         @app.post('/htmx/connect-to-bluetooth')
         async def connect_to_bluetooth(request):
-
-### This is failing - if successful, it writes. If failure, it hangs. Either way, after the response is returned, nothing else works correctly
-### Think it has to do with the double await
-
-############################################################################################################################### HELP???? ######################################################
-# It seems to 'work', the file is written, but then it doesn't serve anything after being refreshed (44b files are served... or just pending)
-# obviously this has something to do with me not understanding async yet in python
-# Perhaps I should just issue a machine.reset()?
-############################################################################################################################### HELP???? ######################################################
-
             if await self.bluetooth.provision():
                 with open('web/htmx-templates/bluetooth-provision-success.html') as f:
                     content = f.read()
                     f.close()
-
-                content = content, 200, {'Connection': 'close'}
             else:
                 with open('web/htmx-templates/bluetooth-provision-failure.html') as f:
                     content = f.read()
@@ -132,7 +120,6 @@ class App:
 
     def output_wifi_list(self):
         ssids = self.wifi.get_available_ssids()
-
         listOfSsids = ''
         if len(ssids) == 0:
             listOfSsids = '<div class="error-message">No WiFi is within range or discoverable.</div>'
